@@ -59,3 +59,7 @@ A chrome plugin to get Youtube insights using an end-to-end ML model built using
 
 --------
 
+
+#### DVC PIPELINE
+
+![alt text](image.png)
