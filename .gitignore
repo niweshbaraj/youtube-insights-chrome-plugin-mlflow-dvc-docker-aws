@@ -185,3 +185,4 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 /tfidf_vectorizer.pkl
+/lgbm_model.pkl
