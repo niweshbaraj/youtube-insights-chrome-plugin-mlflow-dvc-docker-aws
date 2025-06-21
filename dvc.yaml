@@ -16,3 +16,15 @@ stages:
     - src/data/data_preprocessing.py
     outs:
     - data/interim
+
+  feature_building:
+    cmd: python src/features/feature_building.py
+    deps:
+    - data/interim/train_processed.csv
+    - data/interim/test_processed.csv
+    - src/features/feature_building.py
+    params:
+    - feature_building.max_features
+    - feature_building.ngram_range
+    outs:
+    - tfidf_vectorizer.pkl
