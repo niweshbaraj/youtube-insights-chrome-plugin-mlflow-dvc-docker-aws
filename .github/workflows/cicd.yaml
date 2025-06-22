@@ -137,7 +137,7 @@ jobs:
             docker pull 208408932111.dkr.ecr.ap-south-1.amazonaws.com/yt-chrome-plugin-ecr:latest
             docker stop youtube-insights-app || true
             docker rm youtube-insights-app || true
-            docker run -d -p 80:5000 --name youtube-insights-app 208408932111.dkr.ecr.ap-south-1.amazonaws.com/yt-chrome-plugin-ecr:latest
+            docker run -d -p 8888:5000 --name youtube-insights-app 208408932111.dkr.ecr.ap-south-1.amazonaws.com/yt-chrome-plugin-ecr:latest
 
       # Following command is running deployment scripts for CodeDeploy
       # # Zip the required files
