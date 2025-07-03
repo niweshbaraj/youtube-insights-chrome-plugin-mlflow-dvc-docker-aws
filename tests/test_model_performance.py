@@ -24,10 +24,10 @@ repo_name = "youtube-insights-chrome-plugin-mlflow-dvc-docker-aws"
 # Set up MLflow tracking URI
 mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
-@pytest.mark.parametrize("model_name, stage, holdout_data_path, vectorizer_path", [
-    ("yt_chrome_plugin_model", "staging", "data/interim/test_processed.csv", "tfidf_vectorizer.pkl"),  # Replace with your actual paths
+@pytest.mark.parametrize("model_name, stage, holdout_data_path", [
+    ("yt_chrome_plugin_model", "staging", "data/interim/test_processed.csv"),  # Replace with your actual paths
 ])
-def test_model_performance(model_name, stage, holdout_data_path, vectorizer_path):
+def test_model_performance(model_name, stage, holdout_data_path):
     try:
         # Load the model from MLflow
         client = mlflow.tracking.MlflowClient()
@@ -39,24 +39,13 @@ def test_model_performance(model_name, stage, holdout_data_path, vectorizer_path
         model_uri = f"models:/{model_name}/{latest_version}"
         model = mlflow.pyfunc.load_model(model_uri)
 
-        # Load the vectorizer
-        with open(vectorizer_path, 'rb') as file:
-            vectorizer = pickle.load(file)
-
         # Load the holdout test data
-        holdout_data = pd.read_csv(holdout_data_path)
-        X_holdout_raw = holdout_data.iloc[:, :-1].squeeze()  # Raw text features (assuming text is in the first column)
-        y_holdout = holdout_data.iloc[:, -1]  # Labels
-
-        # Handle NaN values in the text data
-        X_holdout_raw = X_holdout_raw.fillna("")
-
-        # Apply TF-IDF transformation
-        X_holdout_tfidf = vectorizer.transform(X_holdout_raw)
-        X_holdout_tfidf_df = pd.DataFrame(X_holdout_tfidf.toarray(), columns=vectorizer.get_feature_names_out())
+        holdout = pd.read_csv(holdout_data_path)
+        X_holdout = holdout["clean_comment"].fillna("")
+        y_holdout = holdout["category"]
 
         # Predict using the model
-        y_pred_new = model.predict(X_holdout_tfidf_df)
+        y_pred_new = model.predict(pd.DataFrame({"clean_comment": X_holdout}))
 
         # Calculate performance metrics
         accuracy_new = accuracy_score(y_holdout, y_pred_new)

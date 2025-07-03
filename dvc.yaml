@@ -17,37 +17,24 @@ stages:
     outs:
     - data/interim
 
-  feature_building:
-    cmd: python src/features/feature_building.py
-    deps:
-    - data/interim/train_processed.csv
-    - data/interim/test_processed.csv
-    - src/features/feature_building.py
-    params:
-    - feature_building.max_features
-    - feature_building.ngram_range
-    outs:
-    - tfidf_vectorizer.pkl
-
   model_building:
     cmd: python src/model/model_building.py
     deps:
-    - tfidf_vectorizer.pkl
     - data/interim/train_processed.csv
-    - src/features/feature_building.py
     - src/model/model_building.py
     params:
+    - model_building.max_features
+    - model_building.ngram_range
     - model_building.learning_rate
     - model_building.max_depth
     - model_building.n_estimators
     outs:
-    - lgbm_model.pkl
+    - tfidf_lgbm_model.pkl
 
   model_evaluation:
     cmd: python src/model/model_evaluation.py
     deps:
-    - lgbm_model.pkl
-    - tfidf_vectorizer.pkl
+    - tfidf_lgbm_model.pkl
     - data/interim/train_processed.csv
     - data/interim/test_processed.csv
     - src/model/model_evaluation.py

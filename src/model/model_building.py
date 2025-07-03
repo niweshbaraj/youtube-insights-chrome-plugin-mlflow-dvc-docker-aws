@@ -6,6 +6,7 @@ import os
 import pickle
 import yaml
 import logging
+from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
 import lightgbm as lgb
 
@@ -60,44 +61,29 @@ def load_data(file_path: str) -> pd.DataFrame:
         raise
 
 
-def load_tfidf_vectorizer(file_path: str) -> TfidfVectorizer:
-    """Load the TF-IDF vectorizer from a file."""
+def train_tfidf_lgbm(X_train: np.ndarray, y_train: np.ndarray, max_features: int, ngram_range: tuple, learning_rate: float, max_depth: int, n_estimators: int) -> Pipeline:
+     """Builds, Trains and returns a TF-IDF + LightGBM scikit-learn Pipeline."""
     try:
-        with open(file_path, 'rb') as f:
-            vectorizer = pickle.load(f)
-        logger.debug('TF-IDF vectorizer loaded from %s', file_path)
-        return vectorizer
-    except FileNotFoundError:
-        logger.error('TF-IDF vectorizer file not found: %s', file_path)
-        raise
-    except pickle.UnpicklingError as e:
-        logger.error('Failed to unpickle the TF-IDF vectorizer: %s', e)
-        raise
+        best_model_pipeline = Pipeline([
+            ('tfidf', TfidfVectorizer(max_features=max_features, ngram_range=ngram_range)),
+            ('lgbm', lgb.LGBMClassifier(
+                objective='multiclass',
+                num_class=3,
+                metric="multi_logloss",
+                is_unbalance=True,
+                class_weight="balanced",
+                reg_alpha=0.1,  # L1 regularization
+                reg_lambda=0.1,  # L2 regularization
+                learning_rate=learning_rate,
+                max_depth=max_depth,
+                n_estimators=n_estimators
+            ))
+        ])
+        best_model_pipeline.fit(X_train, y_train)
+        logger.debug('TF-IDF + LightGBM model training completed')
+        return best_model_pipeline
     except Exception as e:
-        logger.error('Unexpected error while loading the TF-IDF vectorizer: %s', e)
-        raise
-
-
-def train_lgbm(X_train: np.ndarray, y_train: np.ndarray, learning_rate: float, max_depth: int, n_estimators: int) -> lgb.LGBMClassifier:
-    """Train a LightGBM model."""
-    try:
-        best_model = lgb.LGBMClassifier(
-            objective='multiclass',
-            num_class=3,
-            metric="multi_logloss",
-            is_unbalance=True,
-            class_weight="balanced",
-            reg_alpha=0.1,  # L1 regularization
-            reg_lambda=0.1,  # L2 regularization
-            learning_rate=learning_rate,
-            max_depth=max_depth,
-            n_estimators=n_estimators
-        )
-        best_model.fit(X_train, y_train)
-        logger.debug('LightGBM model training completed')
-        return best_model
-    except Exception as e:
-        logger.error('Error during LightGBM model training: %s', e)
+        logger.error('Error during TF-IDF + LightGBM model training: %s', e)
         raise
 
 
@@ -126,6 +112,8 @@ def main():
         # Load parameters from the root directory
         params = load_params(os.path.join(root_dir, 'params.yaml'))
 
+        max_features = params['model_building']['max_features']
+        ngram_range = tuple(params['model_building']['ngram_range'])
         learning_rate = params['model_building']['learning_rate']
         max_depth = params['model_building']['max_depth']
         n_estimators = params['model_building']['n_estimators']
@@ -133,20 +121,15 @@ def main():
         # Load the preprocessed training data from the interim directory
         train_data = load_data(os.path.join(root_dir, 'data/interim/train_processed.csv'))
 
-        # Load vectorizer
-        tfidf_vectorizer = load_tfidf_vectorizer(os.path.join(root_dir, 'tfidf_vectorizer.pkl'))
-
-        # Transform the training data using the loaded vectorizer
-        X_train_tfidf = tfidf_vectorizer.transform(train_data['clean_comment'].values)
-        logger.debug('Training data transformed using TF-IDF vectorizer')
+        X_train = train_data['clean_comment'].values
 
         y_train = train_data['category'].values
-       
-        # Train the LightGBM model using hyperparameters from params.yaml
-        best_model = train_lgbm(X_train_tfidf, y_train, learning_rate, max_depth, n_estimators)
+
+        # Train the TFIDF with LightGBM model pipeline using hyperparameters from params.yaml
+        best_model_pipeline = train_tfidf_lgbm(X_train, y_train, max_features, ngram_range, learning_rate, max_depth, n_estimators)
 
         # Save the trained model in the root directory
-        save_model(best_model, os.path.join(root_dir, 'lgbm_model.pkl'))
+        save_model(best_model_pipeline, os.path.join(root_dir, 'tfidf_lgbm_model.pkl'))
 
     except Exception as e:
         logger.error('Failed to complete the feature engineering and model building process: %s', e)

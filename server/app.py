@@ -18,7 +18,6 @@ import pandas as pd
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from mlflow.tracking import MlflowClient
-from sklearn.feature_extraction.text import TfidfVectorizer
 import matplotlib.dates as mdates
 
 app = Flask(__name__)
@@ -43,19 +42,8 @@ repo_owner = "niweshbaraj"
 repo_name = "youtube-insights-chrome-plugin-mlflow-dvc-docker-aws"
 
 
-def load_vectorizer(vectorizer_path: str) -> TfidfVectorizer:
-    """Load the saved TF-IDF vectorizer."""
-    try:
-        with open(vectorizer_path, 'rb') as file:
-            vectorizer = pickle.load(file)
-        return vectorizer
-    except Exception as e:
-        print(f"Error loading vectorizer from {vectorizer_path}: {e}")
-        raise
-
-
 # Load the model and vectorizer from the model registry and local storage
-def load_model_and_vectorizer(model_name, model_version, vectorizer_path):
+def load_model(model_name, model_version):
 
     # Set up MLflow tracking URI
     mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
@@ -65,11 +53,10 @@ def load_model_and_vectorizer(model_name, model_version, vectorizer_path):
     model_uri = f"models:/{model_name}/{model_version}"
     model = mlflow.pyfunc.load_model(model_uri)
     # print(model.metadata.signature)
-    vectorizer = load_vectorizer(vectorizer_path)  # Load the vectorizer
-    return model, vectorizer
+    return model
 
 # Initialize the model and vectorizer
-model, vectorizer = load_model_and_vectorizer("yt_chrome_plugin_model", "1", "./tfidf_vectorizer.pkl")  # Update paths and versions as needed
+model = load_model("yt_chrome_plugin_model", "1")  # Update paths and versions as needed
 
 
 @app.route('/')
@@ -122,16 +109,11 @@ def predict_with_timestamps():
         # Preprocess each comment before vectorizing
         preprocessed_comments = [preprocess_comment(comment) for comment in comments]
         
-        # Transform comments using the vectorizer
-        transformed_comments = vectorizer.transform(preprocessed_comments)
-        
-        # Convert the transformed comments to a DataFrame and ensure it has the correct column names
-        transformed_comments_df = pd.DataFrame.sparse.from_spmatrix(transformed_comments)
-        transformed_comments_df = pd.DataFrame(transformed_comments.toarray(), columns=vectorizer.get_feature_names_out())
+        input_df = pd.DataFrame({'clean_comment': preprocessed_comments})
         
         # Make predictions
-        predictions = model.predict(transformed_comments_df).tolist()  # Convert to list
-        
+        predictions = model.predict(input_df).tolist()  # Convert to list
+
         # Convert predictions to strings for consistency
         predictions = [str(pred) for pred in predictions]
     except Exception as e:
@@ -154,15 +136,10 @@ def predict():
         # Preprocess each comment before vectorizing
         preprocessed_comments = [preprocess_comment(comment) for comment in comments]
         
-        # Transform comments using the vectorizer
-        transformed_comments = vectorizer.transform(preprocessed_comments)
-
-        # Convert the transformed comments to a DataFrame and ensure it has the correct column names
-        transformed_comments_df = pd.DataFrame.sparse.from_spmatrix(transformed_comments)
-        transformed_comments_df = pd.DataFrame(transformed_comments.toarray(), columns=vectorizer.get_feature_names_out())
+        input_df = pd.DataFrame({'clean_comment': preprocessed_comments})
         
         # Make predictions
-        predictions = model.predict(transformed_comments_df).tolist()  # Convert to list
+        predictions = model.predict(input_df).tolist()  # Convert to list
         
         # Convert predictions to strings for consistency
         predictions = [str(pred) for pred in predictions]

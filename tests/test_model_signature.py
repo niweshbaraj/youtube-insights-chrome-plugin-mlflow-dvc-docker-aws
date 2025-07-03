@@ -24,10 +24,10 @@ repo_name = "youtube-insights-chrome-plugin-mlflow-dvc-docker-aws"
 # Set up MLflow tracking URI
 mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
-@pytest.mark.parametrize("model_name, stage, vectorizer_path", [
-    ("yt_chrome_plugin_model", "staging", "tfidf_vectorizer.pkl"),  # Replace with your actual model name and vectorizer path
+@pytest.mark.parametrize("model_name, stage", [
+    ("yt_chrome_plugin_model", "staging"),
 ])
-def test_model_with_vectorizer(model_name, stage, vectorizer_path):
+def test_model_with_vectorizer(model_name, stage):
     client = MlflowClient()
 
     # Get the latest version in the specified stage
@@ -41,23 +41,14 @@ def test_model_with_vectorizer(model_name, stage, vectorizer_path):
         model_uri = f"models:/{model_name}/{latest_version}"
         model = mlflow.pyfunc.load_model(model_uri)
 
-        # Load the vectorizer
-        with open(vectorizer_path, 'rb') as file:
-            vectorizer = pickle.load(file)
-
         # Create a dummy input for the model
-        input_text = "hi how are you"
-        input_data = vectorizer.transform([input_text])
-        input_df = pd.DataFrame(input_data.toarray(), columns=vectorizer.get_feature_names_out())  # <-- Use correct feature names
+        input_text_df = pd.DataFrame({"clean_comment": ["This is awesome!", "Terrible content"]})
 
         # Predict using the model
-        prediction = model.predict(input_df)
+        prediction = model.predict(input_text_df)
 
-        # Verify the input shape matches the vectorizer's feature output
-        assert input_df.shape[1] == len(vectorizer.get_feature_names_out()), "Input feature count mismatch"
-
-        # Verify the output shape (assuming binary classification with a single output)
-        assert len(prediction) == input_df.shape[0], "Output row count mismatch"
+        # Verify the output shape
+        assert len(prediction) == input_text_df.shape[0], "Output row count mismatch"
 
         print(f"Model '{model_name}' version {latest_version} successfully processed the dummy input.")
 

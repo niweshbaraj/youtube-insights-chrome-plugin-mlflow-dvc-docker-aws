@@ -6,7 +6,6 @@ import yaml
 import mlflow
 import mlflow.sklearn
 from sklearn.metrics import classification_report, confusion_matrix
-from sklearn.feature_extraction.text import TfidfVectorizer
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -61,27 +60,15 @@ def load_data(file_path: str) -> pd.DataFrame:
         raise
 
 
-def load_model(model_path: str):
-    """Load the trained model."""
+def load_model_pipeline(model_path: str):
+    """Load the trained model pipeline."""
     try:
         with open(model_path, 'rb') as file:
-            model = pickle.load(file)
-        logger.debug('Model loaded from %s', model_path)
-        return model
+            model_pipeline = pickle.load(file)
+        logger.debug('Model pipeline loaded from %s', model_path)
+        return model_pipeline
     except Exception as e:
         logger.error('Error loading model from %s: %s', model_path, e)
-        raise
-
-
-def load_vectorizer(vectorizer_path: str) -> TfidfVectorizer:
-    """Load the saved TF-IDF vectorizer."""
-    try:
-        with open(vectorizer_path, 'rb') as file:
-            vectorizer = pickle.load(file)
-        logger.debug('TF-IDF vectorizer loaded from %s', vectorizer_path)
-        return vectorizer
-    except Exception as e:
-        logger.error('Error loading vectorizer from %s: %s', vectorizer_path, e)
         raise
 
 
@@ -160,41 +147,38 @@ def main():
             # Log parameters
             for key, value in params.items():
                 mlflow.log_param(key, value)
-            
-            # Load model and vectorizer
-            model = load_model(os.path.join(root_dir, 'lgbm_model.pkl'))
-            vectorizer = load_vectorizer(os.path.join(root_dir, 'tfidf_vectorizer.pkl'))
+
+            # Load model
+            model_pipeline = load_model_pipeline(os.path.join(root_dir, 'tfidf_lgbm_model.pkl'))
 
             # Load test data for signature inference
             test_data = load_data(os.path.join(root_dir, 'data/interim/test_processed.csv'))
 
             # Prepare test data
-            X_test_tfidf = vectorizer.transform(test_data['clean_comment'].values)
+            # X_test_tfidf = vectorizer.transform(test_data['clean_comment'].values)
+            X_test = test_data['clean_comment'].values
             y_test = test_data['category'].values
 
             # Create a DataFrame for signature inference (using first few rows as an example)
-            input_example = pd.DataFrame(X_test_tfidf.toarray()[:5], columns=vectorizer.get_feature_names_out())  # <--- Added for signature
+            input_example = pd.DataFrame({'clean_comment': X_test[:5]})  # <--- Added for signature
 
             # Infer the signature
-            signature = infer_signature(input_example, model.predict(X_test_tfidf[:5]))  # <--- Added for signature
+            signature = infer_signature(input_example, model_pipeline.predict(X_test[:5]))
 
             # Log model with signature
             mlflow.sklearn.log_model(
-                model,
-                "lgbm_model",
+                model_pipeline,
+                "tfidf_lgbm_model",
                 signature=signature,  # <--- Added for signature
                 input_example=input_example  # <--- Added input example
             )
 
             # Save model info
-            model_path = "lgbm_model"
+            model_path = "tfidf_lgbm_model"
             save_model_info(run.info.run_id, model_path, 'experiment_info.json')
 
-            # Log the vectorizer as an artifact
-            mlflow.log_artifact(os.path.join(root_dir, 'tfidf_vectorizer.pkl'))
-
             # Evaluate model and get metrics
-            report, cm = evaluate_model(model, X_test_tfidf, y_test)
+            report, cm = evaluate_model(model_pipeline, X_test, y_test)
 
             # Log classification report metrics for the test data
             for label, metrics in report.items():
@@ -209,7 +193,7 @@ def main():
             log_confusion_matrix(cm, "Test Data")
 
             # Add important tags
-            mlflow.set_tag("model_type", "LightGBM")
+            mlflow.set_tag("model_type", "TF-IDF + LightGBM")
             mlflow.set_tag("task", "Sentiment Analysis")
             mlflow.set_tag("dataset", "YouTube Comments")
 
