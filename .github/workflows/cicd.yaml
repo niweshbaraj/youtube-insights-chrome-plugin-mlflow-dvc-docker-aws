@@ -110,7 +110,8 @@ jobs:
         run: |
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/yt-chrome-plugin-insights:latest
 
-      - name: Deploy to AWS secrets.EC2_HOST
+      - name: Deploy to AWS EC2
+      # This step deploys the Docker image to an AWS EC2 instance using SSH
         if: success()
         uses: appleboy/ssh-action@v0.1.5
         with:

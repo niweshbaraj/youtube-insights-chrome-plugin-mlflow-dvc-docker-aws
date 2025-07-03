@@ -55,7 +55,7 @@ def load_model(model_name, model_version):
     # print(model.metadata.signature)
     return model
 
-# Initialize the model and vectorizer
+# Initialize the model
 model = load_model("yt_chrome_plugin_model_pipeline", "1")  # Update paths and versions as needed
 
 
@@ -137,9 +137,16 @@ def predict():
         preprocessed_comments = [preprocess_comment(comment) for comment in comments]
         
         input_df = pd.DataFrame({'clean_comment': preprocessed_comments})
-        
+
         # Make predictions
         predictions = model.predict(input_df).tolist()  # Convert to list
+
+         ## Debugging
+        print("COMMENTS:", comments)
+        print("PREPROCESSED:", preprocessed_comments)
+        print("DataFrame passed to model:")
+        print(input_df)
+        print("Predictions:", predictions)
         
         # Convert predictions to strings for consistency
         predictions = [str(pred) for pred in predictions]
