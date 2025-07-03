@@ -18,9 +18,10 @@ stages:
     - data/interim
 
   model_building:
-    cmd: python src/model/model_building.py
+    cmd: PYTHONPATH=. python src/model/model_building.py
     deps:
     - data/interim/train_processed.csv
+    - src/utils/pipeline_utils.py
     - src/model/model_building.py
     params:
     - model_building.max_features
@@ -32,11 +33,12 @@ stages:
     - tfidf_lgbm_model.pkl
 
   model_evaluation:
-    cmd: python src/model/model_evaluation.py
+    cmd: PYTHONPATH=. python src/model/model_evaluation.py
     deps:
     - tfidf_lgbm_model.pkl
     - data/interim/train_processed.csv
     - data/interim/test_processed.csv
+    - src/utils/pipeline_utils.py
     - src/model/model_evaluation.py
     outs:
     - experiment_info.json

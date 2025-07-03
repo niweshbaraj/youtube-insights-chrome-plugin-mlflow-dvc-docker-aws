@@ -11,7 +11,7 @@ from sklearn.preprocessing import FunctionTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
 import lightgbm as lgb
 
-from ..utils.pipeline_utils import select_clean_comment_column 
+from src.utils.pipeline_utils import select_clean_comment_column 
 
 # logging configuration
 logger = logging.getLogger('model_building')
