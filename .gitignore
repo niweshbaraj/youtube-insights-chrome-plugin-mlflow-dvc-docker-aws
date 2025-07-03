@@ -187,3 +187,4 @@ cython_debug/
 /tfidf_vectorizer.pkl
 /lgbm_model.pkl
 /experiment_info.json
+/tfidf_lgbm_model.pkl
