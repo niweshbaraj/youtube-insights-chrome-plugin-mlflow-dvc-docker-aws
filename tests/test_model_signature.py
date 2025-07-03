@@ -1,3 +1,4 @@
+import os
 import mlflow
 import pytest
 import pandas as pd
