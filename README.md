@@ -120,6 +120,13 @@ AWS deployment architecture
 #### Frontend View (Ex.)
 
 
+![image](https://github.com/user-attachments/assets/db50670c-2ade-4452-b1c6-73ceb69b74f8)
+
+![image](https://github.com/user-attachments/assets/c987fea5-313a-48b5-b471-db18c59578a3)
+
+![image](https://github.com/user-attachments/assets/a0eb5133-8268-4a54-b332-5e985fdeff7d)
+
+
 #### Environment Set (Local)
 
 - conda create -n yt-insights-ch-plugin python=3.11
