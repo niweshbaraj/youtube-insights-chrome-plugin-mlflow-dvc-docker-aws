@@ -62,7 +62,7 @@ def load_data(file_path: str) -> pd.DataFrame:
 
 
 def train_tfidf_lgbm(X_train: np.ndarray, y_train: np.ndarray, max_features: int, ngram_range: tuple, learning_rate: float, max_depth: int, n_estimators: int) -> Pipeline:
-     """Builds, Trains and returns a TF-IDF + LightGBM scikit-learn Pipeline."""
+    """Builds, Trains and returns a TF-IDF + LightGBM scikit-learn Pipeline."""
     try:
         best_model_pipeline = Pipeline([
             ('tfidf', TfidfVectorizer(max_features=max_features, ngram_range=ngram_range)),
