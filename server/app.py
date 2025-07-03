@@ -1,5 +1,6 @@
 # app.py
 
+import os
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend before importing pyplot
 
@@ -24,6 +25,24 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 
+# Set your remote tracking URI - AWS EC2 MLFlow server
+# Make sure to replace with your actual MLFlow server URI
+# mlflow.set_tracking_uri("http://ec2-13-127-25-124.ap-south-1.compute.amazonaws.com:5000/")
+
+# Set up DagsHub credentials for MLflow tracking
+dagshub_token = os.getenv("DAGSHUB_PAT")
+
+if not dagshub_token:
+    raise EnvironmentError("DAGSHUB_PAT environment variable is not set")
+
+os.environ["MLFLOW_TRACKING_USERNAME"] = dagshub_token
+os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
+
+dagshub_url = "https://dagshub.com"
+repo_owner = "niweshbaraj"
+repo_name = "youtube-insights-chrome-plugin-mlflow-dvc-docker-aws"
+
+
 def load_vectorizer(vectorizer_path: str) -> TfidfVectorizer:
     """Load the saved TF-IDF vectorizer."""
     try:
@@ -37,8 +56,11 @@ def load_vectorizer(vectorizer_path: str) -> TfidfVectorizer:
 
 # Load the model and vectorizer from the model registry and local storage
 def load_model_and_vectorizer(model_name, model_version, vectorizer_path):
-    # Set MLflow tracking URI to your server
-    mlflow.set_tracking_uri("http://ec2-13-127-25-124.ap-south-1.compute.amazonaws.com:5000/")  # Replace with your MLflow tracking URI
+
+    # Set up MLflow tracking URI
+    mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
+
+    # Load the model from the MLflow Model Registry
     client = MlflowClient()
     model_uri = f"models:/{model_name}/{model_version}"
     model = mlflow.pyfunc.load_model(model_uri)
@@ -104,6 +126,7 @@ def predict_with_timestamps():
         transformed_comments = vectorizer.transform(preprocessed_comments)
         
         # Convert the transformed comments to a DataFrame and ensure it has the correct column names
+        transformed_comments_df = pd.DataFrame.sparse.from_spmatrix(transformed_comments)
         transformed_comments_df = pd.DataFrame(transformed_comments.toarray(), columns=vectorizer.get_feature_names_out())
         
         # Make predictions
@@ -135,6 +158,7 @@ def predict():
         transformed_comments = vectorizer.transform(preprocessed_comments)
 
         # Convert the transformed comments to a DataFrame and ensure it has the correct column names
+        transformed_comments_df = pd.DataFrame.sparse.from_spmatrix(transformed_comments)
         transformed_comments_df = pd.DataFrame(transformed_comments.toarray(), columns=vectorizer.get_feature_names_out())
         
         # Make predictions

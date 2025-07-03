@@ -1,4 +1,4 @@
-# src/model/model_building.py
+# src/features/feature_building.py
 
 import numpy as np
 import pandas as pd
