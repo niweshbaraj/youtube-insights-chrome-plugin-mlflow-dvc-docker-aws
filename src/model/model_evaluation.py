@@ -12,6 +12,8 @@ import seaborn as sns
 import json
 from mlflow.models import infer_signature
 
+from src.utils.pipeline_utils import select_clean_comment_column
+
 # logging configuration
 logger = logging.getLogger('model_evaluation')
 logger.setLevel('DEBUG')

@@ -11,6 +11,7 @@ import mlflow
 
 # Set up DagsHub credentials for MLflow tracking
 dagshub_token = os.getenv("DAGSHUB_PAT")
+
 if not dagshub_token:
     raise EnvironmentError("DAGSHUB_PAT environment variable is not set")
 
@@ -25,7 +26,7 @@ repo_name = "youtube-insights-chrome-plugin-mlflow-dvc-docker-aws"
 mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
 @pytest.mark.parametrize("model_name, stage, holdout_data_path", [
-    ("yt_chrome_plugin_model", "staging", "data/interim/test_processed.csv"),  # Replace with your actual paths
+    ("yt_chrome_plugin_model_pipeline", "staging", "data/interim/test_processed.csv"),  # Replace with your actual paths
 ])
 def test_model_performance(model_name, stage, holdout_data_path):
     try:

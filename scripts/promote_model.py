@@ -3,7 +3,9 @@ import mlflow
 
 
 # Set up DagsHub credentials for MLflow tracking
-dagshub_token = os.getenv("DAGSHUB_PAT")
+# dagshub_token = os.getenv("DAGSHUB_PAT")
+dagshub_token = "36a6feeec55fdbc4816db124eb38431d33a81600"
+
 if not dagshub_token:
     raise EnvironmentError("DAGSHUB_PAT environment variable is not set")
 
@@ -25,7 +27,7 @@ def promote_model():
 
     client = mlflow.MlflowClient()
 
-    model_name = "yt_chrome_plugin_model"
+    model_name = "yt_chrome_plugin_model_pipeline"
     # Get the latest version in staging
     latest_version_staging = client.get_latest_versions(model_name, stages=["Staging"])[0].version
 

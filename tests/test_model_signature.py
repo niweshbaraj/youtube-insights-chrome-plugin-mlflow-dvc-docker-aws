@@ -11,6 +11,7 @@ from mlflow.tracking import MlflowClient
 
 # Set up DagsHub credentials for MLflow tracking
 dagshub_token = os.getenv("DAGSHUB_PAT")
+
 if not dagshub_token:
     raise EnvironmentError("DAGSHUB_PAT environment variable is not set")
 
@@ -25,9 +26,9 @@ repo_name = "youtube-insights-chrome-plugin-mlflow-dvc-docker-aws"
 mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
 @pytest.mark.parametrize("model_name, stage", [
-    ("yt_chrome_plugin_model", "staging"),
+    ("yt_chrome_plugin_model_pipeline", "staging"),
 ])
-def test_model_with_vectorizer(model_name, stage):
+def test_model(model_name, stage):
     client = MlflowClient()
 
     # Get the latest version in the specified stage
@@ -43,7 +44,7 @@ def test_model_with_vectorizer(model_name, stage):
 
         # Create a dummy input for the model
         input_text_df = pd.DataFrame({"clean_comment": ["This is awesome!", "Terrible content"]})
-
+        
         # Predict using the model
         prediction = model.predict(input_text_df)
 

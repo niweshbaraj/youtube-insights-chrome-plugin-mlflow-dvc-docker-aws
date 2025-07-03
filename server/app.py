@@ -56,7 +56,7 @@ def load_model(model_name, model_version):
     return model
 
 # Initialize the model and vectorizer
-model = load_model("yt_chrome_plugin_model", "1")  # Update paths and versions as needed
+model = load_model("yt_chrome_plugin_model_pipeline", "1")  # Update paths and versions as needed
 
 
 @app.route('/')

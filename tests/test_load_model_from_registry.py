@@ -8,6 +8,7 @@ from mlflow.tracking import MlflowClient
 
 # Set up DagsHub credentials for MLflow tracking
 dagshub_token = os.getenv("DAGSHUB_PAT")
+
 if not dagshub_token:
     raise EnvironmentError("DAGSHUB_PAT environment variable is not set")
 
@@ -45,7 +46,7 @@ def load_model_from_registry(model_name: str, model_version: str):
         raise
 
 # Example usage
-model_name = "yt_chrome_plugin_model"  # Replace with your model name
+model_name = "yt_chrome_plugin_model_pipeline"  # Replace with your model name
 model_version = "1"  # Replace with your model version
 model = load_model_from_registry(model_name, model_version)
 print(f"Model '{model_name}' loaded successfully.")

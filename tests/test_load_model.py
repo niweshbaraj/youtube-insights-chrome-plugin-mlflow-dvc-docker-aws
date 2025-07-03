@@ -9,6 +9,7 @@ from mlflow.tracking import MlflowClient
 
 # Set up DagsHub credentials for MLflow tracking
 dagshub_token = os.getenv("DAGSHUB_PAT")
+
 if not dagshub_token:
     raise EnvironmentError("DAGSHUB_PAT environment variable is not set")
 
@@ -23,7 +24,7 @@ repo_name = "youtube-insights-chrome-plugin-mlflow-dvc-docker-aws"
 mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
 @pytest.mark.parametrize("model_name, stage", [
-    ("yt_chrome_plugin_model", "staging"),])
+    ("yt_chrome_plugin_model_pipeline", "staging"),])
 def test_load_latest_staging_model(model_name, stage):
     client = MlflowClient()
     

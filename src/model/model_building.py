@@ -7,8 +7,11 @@ import pickle
 import yaml
 import logging
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import FunctionTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
 import lightgbm as lgb
+
+from src.utils.pipeline_utils import select_clean_comment_column 
 
 # logging configuration
 logger = logging.getLogger('model_building')
@@ -65,6 +68,7 @@ def train_tfidf_lgbm(X_train: np.ndarray, y_train: np.ndarray, max_features: int
     """Builds, Trains and returns a TF-IDF + LightGBM scikit-learn Pipeline."""
     try:
         best_model_pipeline = Pipeline([
+            ('selector', FunctionTransformer(select_clean_comment_column, validate=False)),
             ('tfidf', TfidfVectorizer(max_features=max_features, ngram_range=ngram_range)),
             ('lgbm', lgb.LGBMClassifier(
                 objective='multiclass',
