@@ -60,15 +60,20 @@ def load_model(model_name, stage="Production"):
     print(f"📦 Loading model {model_uri}")
     model = mlflow.pyfunc.load_model(model_uri)
     # print(model.metadata.signature)
-    return model
+    return model, model_version
 
 # Initialize the model
-model = load_model("yt_chrome_plugin_model_pipeline", "Production")  # Update paths and versions as needed
+model, model_version = load_model("yt_chrome_plugin_model_pipeline", "Production")  # Update paths and versions as needed
 
 
 @app.route('/')
 def home():
     return "Welcome to our flask api"
+
+
+@app.route('/model_version', methods=['GET'])
+def get_model_version():
+    return jsonify({"model_version": model_version})
 
 
 # Define the preprocessing function
