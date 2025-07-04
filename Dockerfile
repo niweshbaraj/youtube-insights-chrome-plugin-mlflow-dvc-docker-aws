@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 && rm 
 
 COPY server/ /app/server/
 
-COPY src/ /app/
+COPY src/ /app/src/
 
 COPY setup.py /app/
 
