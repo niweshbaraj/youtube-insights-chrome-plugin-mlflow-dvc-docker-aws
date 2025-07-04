@@ -56,8 +56,8 @@ def load_model(model_name, stage="Production"):
         raise RuntimeError(f"No model for '{model_name}' in stage '{stage}'")
     
     model_version = latest[0].version
-    model_uri = f"models:/{model_name}/{model_version, flush=True}"
-    print(f"📦 Loading model {model_uri}")
+    model_uri = f"models:/{model_name}/{model_version}"
+    print(f"📦 Loading model {model_uri}", flush=True)
     model = mlflow.pyfunc.load_model(model_uri)
     # print(model.metadata.signature)
     return model, model_version
