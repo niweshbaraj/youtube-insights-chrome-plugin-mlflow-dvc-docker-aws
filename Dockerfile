@@ -16,6 +16,8 @@ RUN pip install --no-cache-dir -e .
 
 RUN python -m nltk.downloader stopwords wordnet
 
+ENV PYTHONPATH=/app
+
 EXPOSE 5000
 
 CMD ["python", "server/app.py"]
