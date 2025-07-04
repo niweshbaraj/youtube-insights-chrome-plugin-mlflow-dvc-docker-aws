@@ -43,20 +43,27 @@ repo_name = "youtube-insights-chrome-plugin-mlflow-dvc-docker-aws"
 
 
 # Load the model and vectorizer from the model registry and local storage
-def load_model(model_name, model_version):
+def load_model(model_name, stage="Production"):
 
     # Set up MLflow tracking URI
     mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
     # Load the model from the MLflow Model Registry
     client = MlflowClient()
+
+    latest = client.get_latest_versions(model_name, stages=[stage])
+    if not latest:
+        raise RuntimeError(f"No model for '{model_name}' in stage '{stage}'")
+    
+    model_version = latest[0].version
     model_uri = f"models:/{model_name}/{model_version}"
+    print(f"📦 Loading model {model_uri}")
     model = mlflow.pyfunc.load_model(model_uri)
     # print(model.metadata.signature)
     return model
 
 # Initialize the model
-model = load_model("yt_chrome_plugin_model_pipeline", "1")  # Update paths and versions as needed
+model = load_model("yt_chrome_plugin_model_pipeline", "Production")  # Update paths and versions as needed
 
 
 @app.route('/')
