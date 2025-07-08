@@ -6,6 +6,7 @@ matplotlib.use('Agg')  # Use non-interactive backend before importing pyplot
 
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
+from flasgger import Swagger
 import io
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
@@ -21,7 +22,28 @@ from mlflow.tracking import MlflowClient
 import matplotlib.dates as mdates
 
 app = Flask(__name__)
+
 CORS(app)  # Enable CORS for all routes
+
+swagger_config = {
+    "headers": [],
+    "title": "YouTube Insights Chrome Plugin API",
+    "version": "1.0",
+    "openapi": "3.0.2",
+    "specs": [
+        {
+            "endpoint": "apispec_1",
+            "route": "/apispec_1.json",
+            "rule_filter": lambda rule: True,  # all in
+            "model_filter": lambda tag: True,  # all in
+        }
+    ],
+    "static_url_path": "/flasgger_static",
+    "swagger_ui": True,
+    "specs_route": "/docs"
+}
+
+swagger = Swagger(app, config=swagger_config)
 
 
 # Set your remote tracking URI - AWS EC2 MLFlow server
@@ -29,7 +51,8 @@ CORS(app)  # Enable CORS for all routes
 # mlflow.set_tracking_uri("http://ec2-13-127-25-124.ap-south-1.compute.amazonaws.com:5000/")
 
 # Set up DagsHub credentials for MLflow tracking
-dagshub_token = os.getenv("DAGSHUB_PAT")
+# dagshub_token = os.getenv("DAGSHUB_PAT")
+dagshub_token = "36a6feeec55fdbc4816db124eb38431d33a81600"
 
 if not dagshub_token:
     raise EnvironmentError("DAGSHUB_PAT environment variable is not set")
@@ -68,11 +91,36 @@ model, model_version = load_model("yt_chrome_plugin_model_pipeline", "Production
 
 @app.route('/')
 def home():
+    """
+    Home endpoint
+    ---
+    tags:
+      - Health Check
+    responses:
+      200:
+        description: Welcome
+        content:
+          text/plain:
+            example: Welcome to our flask api
+    """
     return "Welcome to our flask api"
 
 
-@app.route('/model_version', methods=['GET'])
+@app.route('/model_version')
 def get_model_version():
+    """
+    Get Current Model Version
+    ---
+    tags:
+      - Model Info
+    responses:
+        200:
+            description: Successfully retrieved model version
+            content:
+                application/json:
+                    example:
+                        model_version: "15"
+    """
     return jsonify({"model_version": model_version})
 
 
@@ -108,6 +156,42 @@ def preprocess_comment(comment):
 
 @app.route('/predict_with_timestamps', methods=['POST'])
 def predict_with_timestamps():
+    """
+    Predict sentiment with timestamps.
+    ---
+    tags:
+      - Sentiment
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              comments:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    text:
+                      type: string
+                    timestamp:
+                      type: string
+                example:
+                  - text: "Great!"
+                    timestamp: "2025-07-04T10:00:00"
+                  - text: "Horrible"
+                    timestamp: "2025-07-04T11:00:00"
+    responses:
+      200:
+        description: With timestamps
+        content:
+          application/json:
+            example:
+              - comment: "Great!"
+                sentiment: "1"
+                timestamp: "2025-07-04T10:00:00"
+    """
     data = request.json
     comments_data = data.get('comments')
     
@@ -138,6 +222,34 @@ def predict_with_timestamps():
 
 @app.route('/predict', methods=['POST'])
 def predict():
+    """
+    Predict sentiment of comments.
+    ---
+    tags:
+      - Sentiment
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              comments:
+                type: array
+                items:
+                  type: string
+                example: ["This video is great!", "I hate this video."]
+    responses:
+      200:
+        description: Sentiment results
+        content:
+          application/json:
+            example:
+              - comment: "This video is great!"
+                sentiment: "1"
+              - comment: "I hate this video."
+                sentiment: "-1"
+    """
     data = request.json
     comments = data.get('comments')
     
@@ -173,6 +285,26 @@ def predict():
 
 @app.route('/generate_chart', methods=['POST'])
 def generate_chart():
+    """
+    Generate pie chart from sentiment counts.
+    ---
+    tags:
+      - Visualization
+    requestBody:
+      required: true
+      content:
+        application/json:
+          example:
+            sentiment_counts: {"1": 4, "0": 3, "-1": 1}
+    responses:
+      200:
+        description: PNG pie chart
+        content:
+          image/png:
+            schema:
+              type: string
+              format: binary
+    """
     try:
         data = request.get_json()
         sentiment_counts = data.get('sentiment_counts')
@@ -219,6 +351,26 @@ def generate_chart():
 
 @app.route('/generate_wordcloud', methods=['POST'])
 def generate_wordcloud():
+    """
+    Generate word cloud from comments.
+    ---
+    tags:
+      - Visualization
+    requestBody:
+      required: true
+      content:
+        application/json:
+          example:
+            comments: ["Good job", "Great content"]
+    responses:
+      200:
+        description: PNG word cloud
+        content:
+          image/png:
+            schema:
+              type: string
+              format: binary
+    """
     try:
         data = request.get_json()
         comments = data.get('comments')

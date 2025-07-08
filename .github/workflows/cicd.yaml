@@ -122,6 +122,7 @@ jobs:
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/yt-chrome-plugin-insights:latest
             docker stop youtube-insights-app || true
             docker rm youtube-insights-app || true
+            docker system prune -a -f --volumes
             docker run -d -p 80:5000 --name youtube-insights-app -e DAGSHUB_PAT=${{ secrets.DAGSHUB_PAT }} ${{ secrets.DOCKER_HUB_USERNAME }}/yt-chrome-plugin-insights:latest
 
       # Following command is deploying the Docker image to AWS ECR and EC2
