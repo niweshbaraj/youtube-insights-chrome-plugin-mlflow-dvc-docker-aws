@@ -31,14 +31,18 @@ This plugin connects to a locally running Flask API (or a cloud-deployed endpoin
 - Uses YouTube Data API v3
 
 
-#### Frontend View of Plugin running in Chrome (Ex.)
+#### Frontend View of Plugin running in Chrome
 
 
-![image](plugin_image_1)
+![plugin_image_1](https://github.com/user-attachments/assets/f4051488-8019-4e80-b74c-d619d8e07aa6)
 
-![image](plugin_image_2)
 
-![image](plugin_image_3)
+![plugin_image_2](https://github.com/user-attachments/assets/2827d9c5-f7e1-4b41-a2dd-6db48adb7746)
+
+
+![plugin_image_3](https://github.com/user-attachments/assets/25cab5ad-6706-4a35-8744-1b26b5ea7995)
+
+
 
 
 🚀 **Getting Started**
