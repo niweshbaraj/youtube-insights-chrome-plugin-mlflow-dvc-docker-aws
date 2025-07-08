@@ -1,3 +1,7 @@
+**Backend URL** : [http://ec2-13-201-230-148.ap-south-1.compute.amazonaws.com/](http://ec2-13-201-230-148.ap-south-1.compute.amazonaws.com/)
+
+**API Doc** : [http://ec2-13-201-230-148.ap-south-1.compute.amazonaws.com/docs](http://ec2-13-201-230-148.ap-south-1.compute.amazonaws.com/docs)
+
 # 🎬 Youtube Insights Chrome Plugin
 
 <a target="_blank" href="https://cookiecutter-data-science.drivendata.org/">
@@ -16,7 +20,7 @@ Built with modern MLOps practices, the application integrates:
 
 This plugin connects to a locally running Flask API (or a cloud-deployed endpoint) to process YouTube video comments, perform sentiment analysis, and visualize keyword patterns—all in real-time within the YouTube interface.
 
-🔧 Features
+🔧 **Features**
 
 - Sentiment analysis of YouTube comments
 
@@ -26,29 +30,119 @@ This plugin connects to a locally running Flask API (or a cloud-deployed endpoin
 
 - Uses YouTube Data API v3
 
-🚀 Getting Started
 
-How to run the backend API (Flask + ML model)
-
-How to install and use the Chrome extension locally
-
-🔐 YouTube API Key Setup
-Step-by-step guide to get an API key from Google Cloud Console
-
-🐳 Docker Deployment
-Build and run backend container
-
-Optional: Push to AWS ECR
-
-⚙️ CI/CD & Cloud Infra
-How CI/CD is set up (GitHub Actions, etc.)
-
-AWS deployment architecture
+#### Frontend View of Plugin running in Chrome (Ex.)
 
 
+![image](plugin_image_1)
+
+![image](plugin_image_2)
+
+![image](plugin_image_3)
 
 
-## 🗃️ Project Organization / Folder Structure
+🚀 **Getting Started**
+
+- How to run the backend API (Flask + ML model)
+
+## 🔧 Backend Setup Instructions (Local & EC2)
+
+### 🖥️ Option 1: Run Locally
+
+1. **Create / Activate Environment:**
+
+```bash
+conda create --name your-env-name python=3.11		# conda create -n yt-insights-ch-plugin python=3.11
+
+conda activate your-env-name			# conda activate yt-insights-ch-plugin
+
+# OR
+
+python -m venv your-env-name			# python -m venv yt-insights-ch-plugin
+source your-env-name/bin/activate		# Linux/Mac OR
+your-env-name\Scripts\Activate			# Windows
+```
+
+2. **Install dependencies:**
+
+```bash
+pip install -r requirements.txt
+```
+
+3. **Set environment variable for DagsHub access:**
+
+```bash
+export DAGSHUB_PAT=<your_dagshub_token>
+```
+
+4. **Run the Flask app:**
+
+```bash
+python server/app.py
+```
+
+5. The app should now be running at:
+
+```
+http://localhost:5000
+```
+
+6. Swagger documentation is available at:
+
+```
+http://localhost:5000/docs
+```
+
+---
+
+### ☁️ Option 2: Use Deployed EC2 Backend
+
+> The backend is already deployed to an EC2 instance via CI/CD (GitHub Actions + Docker). You can use it directly by copying the EC2 public URL.
+
+1. Visit the backend live URL in your browser : [http://ec2-13-201-230-148.ap-south-1.compute.amazonaws.com](http://ec2-13-201-230-148.ap-south-1.compute.amazonaws.com)
+
+2. Access Swagger API docs : [http://ec2-13-201-230-148.ap-south-1.compute.amazonaws.com/docs](http://ec2-13-201-230-148.ap-south-1.compute.amazonaws.com/docs)
+
+---
+
+- How to install and use the Chrome extension locally
+
+## 🧩 Chrome Extension Setup (Plugin Integration)
+
+> The plugin fetches sentiment analysis from the backend server and YouTube comment data using the YouTube Data API.
+
+### Step 1: Update `API_URL` and `API_KEY`
+
+Open the plugin file located at:
+
+```
+client/popup.js
+```
+
+Update the following variables:
+
+```javascript
+const API_URL = "http://localhost:5000"; // or your EC2 backend URL
+const API_KEY = "<your_youtube_data_api_key>";	// steps to create given in client/README.md
+```
+
+- Use `http://localhost:5000` for local testing.
+- Use `http://ec2-13-201-230-148.ap-south-1.compute.amazonaws.com` for production (or replace with your deployed public IP).
+
+### Step 2: Load the Plugin
+
+Follow the instructions already provided in the `client/README.md` to:
+- Load the unpacked extension in Chrome.
+- Test the plugin with updated backend API.
+
+---
+
+🔐 **YouTube API Key Setup**
+
+- Step-by-step guide to get an API key from Google Cloud Console is provided in the `client/README.md`
+
+
+## 🗃️ Project Organization / Folder Structure (not adhering strictly to following)
 
 ```
 ├── LICENSE            <- Open-source license if one is chosen
@@ -115,16 +209,7 @@ AWS deployment architecture
 
 #### DVC PIPELINE
 
-![alt text](image.png)
-
-#### Frontend View (Ex.)
-
-
-![image](https://github.com/user-attachments/assets/db50670c-2ade-4452-b1c6-73ceb69b74f8)
-
-![image](https://github.com/user-attachments/assets/c987fea5-313a-48b5-b471-db18c59578a3)
-
-![image](https://github.com/user-attachments/assets/a0eb5133-8268-4a54-b332-5e985fdeff7d)
+![alt text](dvc_image_final.png)
 
 
 #### Environment Set (Local)
@@ -212,4 +297,51 @@ sudo service codedeploy-agent status	# on asg instance connect command line
 
 #### Docker run command
 
+```bash
+# docker command if deployed through AWS ECR
 docker run -p 8888:5000 -e AWS_ACCESS_KEY_ID=YOUR-ACCESS_KEY -e AWS_SECRET_ACCESS_KEY=YOUR-SECRET-ACCESS_KEY niweshbaraj/yt-insights-ch-plugin
+```
+
+```bash
+# docker command for dagshub
+docker run -d -p 80:5000 --name youtube-insights-app -e DAGSHUB_PAT=YOUR-DAGSHUB-API-KEY -e PYTHONPATH=/app niweshbaraj/yt-chrome-plugin-insights:latest
+```
+
+#### Add following (as needed) to your github project Repo > Settings > Secrets and variables > Actions > New repository secret
+
+- AWS_ACCESS_KEY_ID				# Through IAM user
+- AWS_SECRET_ACCESS_KEY			# Through IAM user
+- AWS_DEFAULT_REGION			# Check your AWS region at top right corner
+- EC2_HOST						# Create key-pair login to acces your EC2 instance
+- EC2_SSH_KEY					# Create key-pair login to acces your EC2 instance
+- EC2_USER						# EC2 instance user
+- DOCKER_HUB_USERNAME			# Your dockerhub username
+- DOCKER_HUB_ACCESS_TOKEN		# Create access token in dockerhub
+- DAGSHUB_PAT					# Create token in dagshub
+
+#### `aws configure` - AWS command to run in your local terminal 
+
+- insure aws cli & boto3 is installed in your current environment and type the command `aws configure` in your terminal and press Enter and setup your AWS IAM credentials like following (required to access to AWS resources) :
+
+```bash
+AWS Access Key ID [****************JJND]: YOUR-KEY
+AWS Secret Access Key [****************mzm4]: YOUR-SECRET-KEY
+Default region name [aws-south-1]: YOUR-SELECTED-REGION  # ex : ap-south-1
+Default output format [None]:
+```
+
+#### (Optional) Manual command to run on EC2 instance connect terminal 
+
+```bash
+docker stop youtube-insights-app || true
+
+docker rm youtube-insights-app || true
+
+docker system prune -a -f --volumes
+
+docker pull niweshbaraj/yt-chrome-plugin-insights:latest
+
+docker run -d -p 80:5000 --name youtube-insights-app -e DAGSHUB_PAT=YOUR-ACCESS-TOKEN niweshbaraj/yt-chrome-plugin-insights:latest
+
+docker logs youtube-insights-app		# (optional) to check docker container
+```
